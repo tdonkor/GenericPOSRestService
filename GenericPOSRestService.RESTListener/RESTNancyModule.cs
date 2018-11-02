@@ -10,6 +10,9 @@ using GenericPOSRestService.Common.ServiceCallClasses;
 using Newtonsoft.Json.Linq;
 using Nancy.Responses;
 using Newtonsoft.Json;
+using System.Web.Script.Serialization;
+using System.Net.Http;
+using System.IO;
 
 namespace GenericPOSRestService.RESTListener
 {
@@ -151,7 +154,7 @@ namespace GenericPOSRestService.RESTListener
                             posResponse = OrderTransaction(request);
                         }
                         catch (Exception ex)
-                        {
+                        {   
                             posResponse = new OrderCreatePOSResponse();
                             posResponse.SetPOSError(Errors.POSError, ex.Message);
                         }
@@ -343,26 +346,98 @@ namespace GenericPOSRestService.RESTListener
             return string.Format(skipRequest ? LogResponseSkipRequestString : LogResponseString, url, request, response, calculationTimeInMilliseconds);
         }
 
-        /// <summary>Call the POS for GetStatus method</summary>
+        /// <summary>
+        ///  Get the POS status for the Kiosk 
+        ///  to determine whether an Order can 
+        ///  take place
+        /// </summary>
+        ///
         /// <param name="kiosk">The kiosk id</param>
         public StatusPOSResponse GetStatus(string kiosk)
         {
             StatusPOSResponse response = new StatusPOSResponse();
+            string responseStr = string.Empty;
+            StatusResponse getResponse;
 
-            // TODO: call (calls) to POS
+            RestCalls restCalls = new RestCalls();
+
+            //check kiosk is valid
+            if (string.IsNullOrWhiteSpace(kiosk))
+            {
+                // the kiosk parameter was not specified
+                response.SetPOSError(Errors.KioskNotSpecified);
+            }
+            else
+            {
+                // TODO: call (calls) to POS
+                responseStr = restCalls.GetAsyncRequest("http://192.168.254.151:8080/POS/status/" + kiosk);
+
+                //Deserialise returned data into an object to return
+                 getResponse = JsonConvert.DeserializeObject<StatusResponse>(responseStr);
+                 response.StatusResponse = getResponse;
+            }
 
             return response;
         }
 
-        /// <summary>Call the POS for Order method</summary>
+        /// <summary>
+        /// Call the POS with the Kiosk Order 
+        /// </summary>
         /// <param name="request">The request</param>
         public OrderCreatePOSResponse OrderTransaction(OrderCreateRequest request)
         {
             OrderCreatePOSResponse response = new OrderCreatePOSResponse();
+            HttpStatusCode httpStatusCode = response.HttpStatusCode;
+            Order order = response.OrderCreateResponse.Order;
+           
+            string responseStr = string.Empty;
+            RestCalls restCalls = new RestCalls();
 
             // TODO: call (calls) to POS
+          
+
+            //TODO - Test remove  when injecting an order - convert to a string
+            // requestStr = File.ReadAllText(@"C:\Temp\order5.json");
+
+            string  requestStr = JsonConvert.SerializeObject(request.DOTOrder);
+
+            // prefix and Postfix the JSON string with the DOTOrder and Order and closing tags
+            string requestOrderStr = "{\"DOTOrder\": {\"Order\": " + requestStr + " } } ";
+
+            Console.WriteLine("\n\nRequestStr:" + requestStr);
+           
+            //POST the JSON to the Server and get the response
+            responseStr = restCalls.PostAsyncRequest("http://192.168.254.151:8080/order", requestOrderStr);
+
+            //Deserialize the string to an Object
+            
+            OrderCreateResponse jsonOrder = JsonConvert.DeserializeObject<OrderCreateResponse>(responseStr);
+
+            //After making calls to the POS check HttpStatusCode
+            if (httpStatusCode == HttpStatusCode.Created)
+            {
+                //populate Order with the result from the POS 
+                response.OrderCreateResponse = jsonOrder;
+            }
 
             return response;
+        }
+
+        /// <summary>
+        /// Populates the Order with the results from the POS
+        /// Serializes the order as JSON
+        /// 
+        /// </summary>
+        /// <param name="order"></param>
+        private void PopulateOrder(OrderCreatePOSResponse response, dynamic order /* result from the POS */)
+        {
+            string orderStr = null;
+
+            //TODO update Order
+            response.OrderCreateResponse.Order.Kiosk = order;
+
+           
+         
         }
 
         /// <summary>Call the POS for TestDiag method</summary>
@@ -371,9 +446,25 @@ namespace GenericPOSRestService.RESTListener
         {
             TestDiagPOSResponse response = new TestDiagPOSResponse();
 
-            // TODO: call (calls) to POS
+            /* 
+                TODO: call (calls) to POS
+                Returns a list of tests that can indicate if you fail to get POS status,
+                the reasons for not being able to initiate the connection to the POS and remedies.
+                For example, if a user needs to log in to the POS, the test can check if the user id
+                has also been set if the specified user exists in the POS. It is not mandatory to return a list
+                testing if this can not be technically done(eg there is no method in the SDK of the POS to return
+                user list to check if the user exists).
+            */
+
 
             return response;
+        }
+
+        public void ConvertJsonToDynamic(string jsonObject)
+        {
+            object obj = JsonConvert.DeserializeObject<object>(jsonObject);
+            
+            
         }
     }
 }
