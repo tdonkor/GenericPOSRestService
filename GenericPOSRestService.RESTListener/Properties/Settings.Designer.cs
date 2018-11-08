@@ -31,5 +31,14 @@ namespace GenericPOSRestService.RESTListener.Properties {
                 return ((string)(this["GenericInjectorConfigFileName"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("c:\\Acrelec\\AcrBridgeService\\APISettingsConfig.xml")]
+        public string ApiSettingsConfigFileName {
+            get {
+                return ((string)(this["ApiSettingsConfigFileName"]));
+            }
+        }
     }
 }
