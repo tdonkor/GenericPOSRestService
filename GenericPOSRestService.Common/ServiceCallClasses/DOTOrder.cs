@@ -12,13 +12,14 @@ namespace GenericPOSRestService.Common.ServiceCallClasses
         public FunctionNumber FunctionNumber { get; set; }
         public string StatusDetail { get; set; }
         public string Kiosk { get; set; }
-        public int tableNo { get; set; }
         public string RefInt { get; set; }
         public string OrderID { get; set; }
         public string Day { get; set; }
         public string OrderTime { get; set; }
         public string EventTime { get; set; }
         public string Elog { get; set; }
+        public int tableNo { get; set; }
+        public string TableServiceNumber { get; set; }
 
         private List<Item> items = new List<Item>();
 

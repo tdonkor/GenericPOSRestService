@@ -10,13 +10,12 @@ namespace GenericPOSRestService.Common.ServiceCallClasses
         public string OrderID { get; set; }
         public string Kiosk { get; set; }
         public string RefInt { get; set; }
-        public int tableNo { get; set; }
         public long OrderPOSNumber { get; set; }
         public Closed Closed { get; set; }
         public string POSStatus { get; set; }
         public string Receipt { get; set; }
         public string Elog { get; set; }
-
+        public int tableNo { get; set; }
         private string reason = "Success";
 
         public string Reason

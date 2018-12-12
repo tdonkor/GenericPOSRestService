@@ -406,7 +406,12 @@ namespace GenericPOSRestService.RESTListener
             string orderTimeStr = orderTime.ToString("yyMMddHHmmss");
             request.DOTOrder.OrderTime = orderTimeStr;
 
-            string  requestStr = JsonConvert.SerializeObject(request.DOTOrder);
+            //copy the TableServiceNumber to the tableNo
+            if ((request.DOTOrder.Location == Location.EatIn) && (request.DOTOrder.TableServiceNumber != null))
+                request.DOTOrder.tableNo = Convert.ToInt32(request.DOTOrder.TableServiceNumber);
+            
+
+            string requestStr = JsonConvert.SerializeObject(request.DOTOrder);
 
             // prefix and Postfix the JSON string with the DOTOrder and Order and closing tags
             string requestOrderStr = "{\"DOTOrder\": {\"Order\": " + requestStr + " } } ";
@@ -418,8 +423,16 @@ namespace GenericPOSRestService.RESTListener
             //Deserialize the string to an Object
             OrderCreateResponse jsonOrder = JsonConvert.DeserializeObject<OrderCreateResponse>(responseStr);
 
+            //copy to Order Table Number
+            if ((request.DOTOrder.Location == Location.EatIn) && (request.DOTOrder.TableServiceNumber != null))
+            { 
+                jsonOrder.Order.tableNo = Convert.ToInt32(request.DOTOrder.TableServiceNumber);
+                Log.Info($"Order Table Number is :{jsonOrder.Order.tableNo}");
+            }
+
             //populate Order with the result from the POS 
             response.OrderCreateResponse = jsonOrder;
+           
 
             if (httpStatusCode == HttpStatusCode.Created)
             {
