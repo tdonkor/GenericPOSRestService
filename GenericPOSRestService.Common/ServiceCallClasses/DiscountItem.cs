@@ -10,5 +10,7 @@ namespace GenericPOSRestService.Common.ServiceCallClasses
         public string DiscountID { get; set; }
         public long Amount { get; set; }
         public string Reference { get; set; }
+        public string DiscountName { get; set; }
+        public long OriginalAmount { get; set; }
     }
 }
